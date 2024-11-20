@@ -4,6 +4,6 @@ export default defineConfig({
   dialect: "postgresql",
   schema: "./configs/schema.js",
   dbCredentials: {
-    url: 'postgresql://neondb_owner:QSu5eTXa3rqg@ep-lively-band-a1fx4e17.ap-southeast-1.aws.neon.tech/AI-Study-Material-Gen?sslmode=require'
+    url: process.env.NEXT_PUBLIC_DATABASE_CONNECTION_STRING
   },
 });
