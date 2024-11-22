@@ -20,19 +20,13 @@ function SideBar() {
             path: '/dashboard/upgrade',
             icon: Shield
         },
-        {
-            name: 'Profile',
-            path: '/dashboard/profile',
-            icon: UserCircle
-        }
     ]
-    const {totalCourse,setTotalCourse} = useContext(CourseCountContext);
+    const { totalCourses, setTotalCourses } = useContext(CourseCountContext);
     const path = usePathname();
   return (
     <div className='h-screen shadow-md p-5'>
         <div className='flex gap-2 items-center'>
-            <Image src={'/logo.svg'} alt='logo' width={40} height={40}/>
-            <h2 className='font-bold text-2xl'>Study.ai</h2>
+            <h2 className='font-bold text-2xl'>StudyLite</h2>
         </div>
 
         <div className='mt-10'>
@@ -50,9 +44,9 @@ function SideBar() {
             </div>
         </div> 
         <div className='border p-3 bg-slate-100 rounded-md absolute bottom-10 w-[85%]'>
-           <h2 className='text-lg mb-2'>Available Credits : 5</h2>
-           <Progress value={30}/>
-           <h2 className='text-sm'>{totalCourse} out of 5 Credits Used</h2> 
+           <h2 className='text-lg mb-2'>Available Credits : {5-totalCourses}</h2>
+           <Progress value={(totalCourses/5)*100} className='h-2'/>
+           <h2 className='text-sm'>{totalCourses} out of 5 Credits Used</h2> 
 
            <Link href={'dashboard/upgrade'} className='text-primary text-xs mt-3'>Upgrade to unlock more credits</Link>
         </div>
