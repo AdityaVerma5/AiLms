@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.3.4",
+  "@clerk/nextjs": "6.2.0",
     "@google/generative-ai": "^0.21.0",
     "@neondatabase/serverless": "^0.10.3",
     "@radix-ui/react-progress": "^1.1.0",
