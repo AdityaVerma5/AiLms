@@ -49,7 +49,8 @@ function Create() {
             router.replace('/dashboard');
             toast("Course content being generated, click on Refresh button");
         } catch (err) {
-            const msg = err.response?.data?.error ?? err.message ?? "Failed to generate course outline";
+            const raw = err.response?.data?.error ?? err.response?.data?.message ?? err.message ?? "Failed to generate course outline";
+            const msg = typeof raw === "string" ? raw : (raw?.message ?? raw?.code ?? JSON.stringify(raw));
             toast.error(msg);
             if (err.response?.status === 403) setCanCreate(false);
         } finally {
