@@ -7,10 +7,11 @@ import { CourseCountContext } from '../_context/CourseCountContext'
 
 function DashboardLayout({children}) {
 
-  const [totalCourses,setTotalCourses] = useState(0);
+  const [totalCourses, setTotalCourses] = useState(0);
+  const [creditLimit, setCreditLimit] = useState(5); // 5 = free default, null = unlimited
 
   return (
-    <CourseCountContext.Provider value={{totalCourses,setTotalCourses}}>
+    <CourseCountContext.Provider value={{ totalCourses, setTotalCourses, creditLimit, setCreditLimit }}>
     <div>
         <div className='md:w-64 hidden md:block fixed'>
             <SideBar/>

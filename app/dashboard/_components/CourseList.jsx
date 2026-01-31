@@ -12,21 +12,24 @@ function CourseList() {
     const {user} = useUser();
     const [courseList, setCourseList] = useState([]);
     const [loading,setLoading] = useState(false);
-    const {totalCourses,setTotalCourses} = useContext(CourseCountContext);
+    const { totalCourses, setTotalCourses, setCreditLimit } = useContext(CourseCountContext);
 
     useEffect(()=>{
         user && GetCourseList();
     },[user])
 
     const GetCourseList = async ()=>{
+        if (!user?.primaryEmailAddress?.emailAddress) return;
         setLoading(true);
-        const result = await axios.post('/api/courses', {
-            createdBy: user?.primaryEmailAddress?.emailAddress
-        })
-        console.log(result);   
-        setCourseList(result.data.result); 
+        const email = user.primaryEmailAddress.emailAddress;
+        const [coursesRes, creditsRes] = await Promise.all([
+            axios.post('/api/courses', { createdBy: email }),
+            axios.get(`/api/credits?createdBy=${encodeURIComponent(email)}`).catch(() => ({ data: { used: 0, limit: 5 } })),
+        ]);
+        setCourseList(coursesRes.data.result ?? []);
+        setTotalCourses(coursesRes.data.result?.length ?? 0);
+        setCreditLimit(creditsRes.data?.limit ?? 5);
         setLoading(false);
-        setTotalCourses(result.data.result?.length);
     }
   return (
     <div className='mt-10'>

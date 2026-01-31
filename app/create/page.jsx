@@ -12,11 +12,22 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 function Create() {
-    const[step,setStep] = useState(0);
+    const [step, setStep] = useState(0);
     const [formData, setFormData] = useState([]);
-    const {user} = useUser();
-    const[loading,setLoading] = useState(false);
+    const { user } = useUser();
+    const [loading, setLoading] = useState(false);
+    const [canCreate, setCanCreate] = useState(true); // false when at free limit
     const router = useRouter();
+
+    useEffect(() => {
+        if (!user?.primaryEmailAddress?.emailAddress) return;
+        axios.get(`/api/credits?createdBy=${encodeURIComponent(user.primaryEmailAddress.emailAddress)}`)
+            .then((res) => {
+                const { used, limit } = res.data ?? {};
+                setCanCreate(limit == null || used < limit);
+            })
+            .catch(() => setCanCreate(true));
+    }, [user]);
     const handleUserInput = (fieldName, fieldValue) => {    
         setFormData(prev=>({
             ...prev,
@@ -26,18 +37,24 @@ function Create() {
     }
     console.log('formData',formData);   
     // used to save user input and generate course outline using AI
-    const GenerateCourseOutline = async()=>{
+    const GenerateCourseOutline = async () => {
         const courseId = uuidv4();
         setLoading(true);
-        const result = await axios.post('/api/generate-course-outline', {
-            courseId:courseId,
-            ...formData,
-            createdBy: user?.primaryEmailAddress?.emailAddress
-        })
-        setLoading(false);
-        router.replace('/dashboard');
-        // display toast notification
-        toast("Course content being generated, click on Refresh button");
+        try {
+            await axios.post('/api/generate-course-outline', {
+                courseId,
+                ...formData,
+                createdBy: user?.primaryEmailAddress?.emailAddress,
+            });
+            router.replace('/dashboard');
+            toast("Course content being generated, click on Refresh button");
+        } catch (err) {
+            const msg = err.response?.data?.error ?? err.message ?? "Failed to generate course outline";
+            toast.error(msg);
+            if (err.response?.status === 403) setCanCreate(false);
+        } finally {
+            setLoading(false);
+        }
     }
 
 
@@ -55,7 +72,7 @@ function Create() {
         <div className='flex justify-between w-full mt-32'>
                 { step!=0 ? <Button variant='outline' onClick = {()=>{setStep(step-1)}}>Previous</Button> : '-'}
                 {step==0 ?<Button onClick = {()=>{setStep(step+1)}}>Next</Button> 
-                : <Button onClick = {GenerateCourseOutline} disabled={loading}>{loading ? <Loader className='animate-spin h-5 w-5 text-white'/> : 'Generate'}</Button>}
+                : <Button onClick={GenerateCourseOutline} disabled={loading || !canCreate}>{loading ? <Loader className='animate-spin h-5 w-5 text-white'/> : canCreate ? 'Generate' : 'No credits left — upgrade to continue'}</Button>}
         </div>
 
     </div>

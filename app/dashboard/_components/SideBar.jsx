@@ -21,7 +21,7 @@ function SideBar() {
             icon: Shield
         },
     ]
-    const { totalCourses, setTotalCourses } = useContext(CourseCountContext);
+    const { totalCourses, creditLimit } = useContext(CourseCountContext);
     const path = usePathname();
   return (
     <div className='h-screen shadow-md p-5'>
@@ -44,11 +44,19 @@ function SideBar() {
             </div>
         </div> 
         <div className='border p-3 bg-slate-100 rounded-md absolute bottom-10 w-[85%]'>
-           <h2 className='text-lg mb-2'>Available Credits : {5-totalCourses}</h2>
-           <Progress value={(totalCourses/5)*100} className='h-2'/>
-           <h2 className='text-sm'>{totalCourses} out of 5 Credits Used</h2> 
-
-           <Link href={'dashboard/upgrade'} className='text-primary text-xs mt-3'>Upgrade to unlock more credits</Link>
+           {creditLimit == null ? (
+             <>
+               <h2 className='text-lg mb-2'>Available Credits : Unlimited</h2>
+               <h2 className='text-sm'>{totalCourses} courses created</h2>
+             </>
+           ) : (
+             <>
+               <h2 className='text-lg mb-2'>Available Credits : {Math.max(0, creditLimit - totalCourses)}</h2>
+               <Progress value={creditLimit ? (totalCourses / creditLimit) * 100 : 0} className='h-2'/>
+               <h2 className='text-sm'>{totalCourses} out of {creditLimit} Credits Used</h2>
+               <Link href={'dashboard/upgrade'} className='text-primary text-xs mt-3'>Upgrade to unlock more credits</Link>
+             </>
+           )}
         </div>
 
     </div>

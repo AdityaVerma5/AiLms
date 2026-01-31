@@ -1,10 +1,9 @@
 import { db } from "@/configs/db";
 import { inngest } from "./client";
 import { CHAPTER_NOTES_TABLE, STUDY_MATERIAL_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
-import { use } from "react";
-import { useUser } from "@clerk/nextjs";
 import { eq } from "drizzle-orm";
 import { generateNotes, GenerateQuizAiModel, GenerateStudyTypeContentAiModel } from "@/configs/AiModel";
+import { sendMessageWithRetry } from "@/lib/gemini";
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
@@ -22,17 +21,18 @@ export const CreateNewUser = inngest.createFunction(
         const {user} = event.data;
         // Get Event Data
         const result = await step.run('Check User and create if not exists', async () => {
-            const result = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, user?.primaryEmailAddress?.emailAddress))
-        
-            if(result?.length === 0 && user?.fullName && user?.primaryEmailAddress?.emailAddress) {
-            const userResp = await db.insert(USER_TABLE).values({
-                name: user?.fullName, 
-                email: user?.primaryEmailAddress?.emailAddress,
-                isMember: false 
-            }).returning({id: USER_TABLE.id})
-            return userResp;
-        }
-            return result;
+            const email = user?.email;
+            const existing = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, email));
+
+            if (existing?.length === 0 && user?.fullName && email) {
+                const userResp = await db.insert(USER_TABLE).values({
+                    name: user.fullName,
+                    email,
+                    isMember: false,
+                }).returning({ id: USER_TABLE.id });
+                return userResp;
+            }
+            return existing;
         })
 
         return 'Success'
@@ -56,7 +56,7 @@ export const GenerateNotes = inngest.createFunction(
             await Promise.all(
                 Chapters.map(async (chapter, index) => {
                     const PROMPT = `Generate exam material detail content for each chapter , Make sure to includes all topic point in the content, make sure to give content in HTML format (Do not Add HTMLK , Head, Body, title tag), The chapters: ${JSON.stringify(chapter)}`;
-                    const result = await generateNotes.sendMessage(PROMPT);
+                    const result = await sendMessageWithRetry(generateNotes, PROMPT);
                     const aiResp = await result.response.text();
 
                     await db.insert(CHAPTER_NOTES_TABLE).values({
@@ -93,10 +93,10 @@ export const GenerateStudyTypeContent = inngest.createFunction(
         const {studyType,prompt,courseId,recordId} = event.data;
 
             const AiResult = await step.run("Generate Flashcards", async () => {
-            const result = 
-            studyType=='Flashcard' ? 
-            await GenerateStudyTypeContentAiModel.sendMessage(prompt):
-            await GenerateQuizAiModel.sendMessage(prompt);
+            const result =
+            studyType === 'Flashcard'
+                ? await sendMessageWithRetry(GenerateStudyTypeContentAiModel, prompt)
+                : await sendMessageWithRetry(GenerateQuizAiModel, prompt);
             const AiResult = JSON.parse(result.response.text());
             return AiResult;
             });

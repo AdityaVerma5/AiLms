@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### 1. Run the app
+
 First, run the development server:
 
 ```bash
@@ -15,6 +17,18 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### 2. Run Inngest Dev Server (so courses finish "Generating" and show "View")
+
+Creating a course sends an event to generate chapter notes. For that to run locally you need the **Inngest Dev Server**:
+
+1. In `.env.local` add: `INNGEST_DEV=1`
+2. In a **second terminal** run: `npm run inngest:dev`
+3. Keep both terminals running. Create a course again; after a short time it should show "View" instead of "Generating".
+
+Without the dev server, events go to Inngest Cloud, which cannot reach localhost, so the course stays on "Generating".
+
+---
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 

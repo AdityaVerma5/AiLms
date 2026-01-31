@@ -7,8 +7,9 @@ const {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   const genAI = new GoogleGenerativeAI(apiKey);
   
+  // Default: gemini-2.5-flash-lite = ~1,000 free req/day. Override with GEMINI_MODEL for gemini-2.5-flash (~250/day) if needed.
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
   });
   
   const generationConfig = {
